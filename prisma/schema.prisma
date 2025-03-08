@@ -1,0 +1,76 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id             Int           @id @default(autoincrement())
+  nombre         String
+  apellido       String
+  fechaNacimiento DateTime?     @map("fecha_nacimiento")
+  sexo           String?
+  ocupacion      String?
+  telefono       String
+  email          String?
+  direccion      String?
+  fechaRegistro  DateTime      @default(now()) @map("fecha_registro")
+  notas          String?
+  tratamientos   Tratamiento[]
+
+  @@map("usuarios")
+}
+
+model Tratamiento {
+  id                Int               @id @default(autoincrement())
+  usuarioId         Int               @map("usuario_id")
+  usuario           Usuario           @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  tipoTratamiento   String            @map("tipo_tratamiento")
+  presupuesto       Float?
+  diagnostico       String?
+  resumenTratamiento String?           @map("resumen_tratamiento")
+  fechaInicio       DateTime          @map("fecha_inicio")
+  estadoActual      String            @default("En Progreso") @map("estado_actual")
+  totalSesiones     Int               @map("total_sesiones")
+  sesionesRealizadas Int               @default(0) @map("sesiones_realizadas")
+  precioTotal       Float             @map("precio_total")
+  totalAbonado      Float             @default(0) @map("total_abonado")
+  sesiones          Sesion[]
+  cuestionario      CuestionarioSalud?
+
+  @@map("tratamientos")
+}
+
+model Sesion {
+  id            Int         @id @default(autoincrement())
+  tratamientoId Int         @map("tratamiento_id")
+  tratamiento   Tratamiento @relation(fields: [tratamientoId], references: [id], onDelete: Cascade)
+  numeroSesion  Int         @map("numero_sesion")
+  fecha         DateTime
+  abono         Float       @default(0)
+  notas         String?
+  estado        String      @default("Programada")
+
+  @@map("sesiones")
+}
+
+model CuestionarioSalud {
+  id                 Int         @id @default(autoincrement())
+  tratamientoId      Int         @unique @map("tratamiento_id")
+  tratamiento        Tratamiento @relation(fields: [tratamientoId], references: [id], onDelete: Cascade)
+  fecha              DateTime
+  usaAnticonceptivos Boolean?    @map("usa_anticonceptivos")
+  consumeAlcohol     Boolean?    @map("consume_alcohol")
+  embarazada         Boolean?
+  alergias           String?
+  medicamentos       String?
+  enfermedadesCronicas String?    @map("enfermedades_cronicas")
+  otrasObservaciones  String?    @map("otras_observaciones")
+
+  @@map("cuestionario_salud")
+}
